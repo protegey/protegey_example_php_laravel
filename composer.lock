@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a52a9445af5fd886615b302328ce8d82",
+    "content-hash": "e4def31dc82269f9ff842ad4bb58da58",
     "packages": [
         {
             "name": "brick/math",
@@ -2627,10 +2627,16 @@
         {
             "name": "protegey/sdk",
             "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/protegey/protegey_php_sdk.git",
+                "reference": "21f278d7a8cc8694b4b5cb9a51e0303fab6b672d"
+            },
             "dist": {
-                "type": "path",
-                "url": "../protegey_php_sdk",
-                "reference": "32ed32538f27740d09b46aa1234c94f567f95d4a"
+                "type": "zip",
+                "url": "https://api.github.com/repos/protegey/protegey_php_sdk/zipball/21f278d7a8cc8694b4b5cb9a51e0303fab6b672d",
+                "reference": "21f278d7a8cc8694b4b5cb9a51e0303fab6b672d",
+                "shasum": ""
             },
             "require": {
                 "guzzlehttp/guzzle": "^7.8 || ^8.0",
@@ -2639,6 +2645,7 @@
             "require-dev": {
                 "phpunit/phpunit": "^10.5"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -2659,9 +2666,11 @@
                 "proprietary"
             ],
             "description": "Official Protegey SDK for PHP backends — transaction reporting, identity verification sessions, and webhook signature verification.",
-            "transport-options": {
-                "relative": true
-            }
+            "support": {
+                "source": "https://github.com/protegey/protegey_php_sdk/tree/main",
+                "issues": "https://github.com/protegey/protegey_php_sdk/issues"
+            },
+            "time": "2026-11-16T11:12:09+00:00"
         },
         {
             "name": "psr/clock",
