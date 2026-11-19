@@ -2630,12 +2630,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/protegey/protegey_php_sdk.git",
-                "reference": "8a290844e70572353ec3c4d81aa58c6248f9c640"
+                "reference": "c14f2141f0b5283488c5d9b9a7c0402ef6c3aa3e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/protegey/protegey_php_sdk/zipball/8a290844e70572353ec3c4d81aa58c6248f9c640",
-                "reference": "8a290844e70572353ec3c4d81aa58c6248f9c640",
+                "url": "https://api.github.com/repos/protegey/protegey_php_sdk/zipball/c14f2141f0b5283488c5d9b9a7c0402ef6c3aa3e",
+                "reference": "c14f2141f0b5283488c5d9b9a7c0402ef6c3aa3e",
                 "shasum": ""
             },
             "require": {
@@ -2670,7 +2670,7 @@
                 "source": "https://github.com/protegey/protegey_php_sdk/tree/main",
                 "issues": "https://github.com/protegey/protegey_php_sdk/issues"
             },
-            "time": "2026-11-18T18:12:25+00:00"
+            "time": "2026-11-19T13:37:08+00:00"
         },
         {
             "name": "psr/clock",
@@ -8404,5 +8404,5 @@
         "php": "^8.3"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.11.0"
 }
