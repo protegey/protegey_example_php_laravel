@@ -1,7 +1,7 @@
 # Protegey — Laravel example
 
-Minimal Laravel app demonstrating `protegey/sdk` (PHP, 0.7.0+) from a real backend: transaction
-reporting and listing, alerts, KYC sessions, KYB invitations, sanctions screening, the shared fraud
+Minimal Laravel app demonstrating `protegey/sdk` (PHP, 0.8.0+) from a real backend: transaction
+reporting and listing, cash deposits, alerts, KYC sessions, KYB invitations, sanctions screening, the shared fraud
 signal network, and verifying an incoming webhook's HMAC signature.
 
 ## Run it
@@ -27,17 +27,24 @@ The SDK is pulled from its GitHub repository (`"protegey/sdk": "@dev"`, VCS repo
   `config/services.php` (`PROTEGEY_*` env vars); tests swap it for a mocked one.
 - `app/Http/Controllers/ProtegeyDemoController.php`:
   - `reportTransaction()` / `listTransactions()` — `transactions->report()` / `transactions->list()`.
+  - `reportCashDeposit()` / `listCashDeposits()` — `cashDeposits->record()` (a branch deposit
+    with your own `externalTransactionId`; reusing it gets a 409) / `cashDeposits->list()`
+    (`amount` comes back as a decimal string).
   - `listAlerts()` — `alerts->list(['status' => 'OPEN'])` (the SDK sends the lowercase filter the
     API requires).
   - `startKyc()` / `listKycSessions()` — `kyc->startSession()` (the page opens the hosted URL in a
-    new tab) / `kyc->listSessions()`.
+    new tab) / `kyc->findByExternalUserId()` (exact `externalUserId` lookup, from the page's form or
+    this browser's demo customer), showing each session's final `status`, Protegey's
+    `recommendation` (APPROVE | REVIEW | REJECT) and the pre-signed photo links in `images`
+    (valid 1 hour, re-issued on every call).
   - `inviteKyb()` — `kyb->invite()` with an email and/or a phone number; the response's
     `applicationUrl` is the link to send yourself when you only have a phone number.
   - `screenSanctions()` — `sanctions->screen()`.
   - `checkSharedSignal()` — `sharedSignal->check()`; matches only carry `category` and
     `reportedDaysAgo`.
   - `webhook()` — verifies `X-Signature`/`X-Timestamp` via `WebhookVerifier::verify()` before
-    trusting the payload, de-duplicates retried deliveries on `eventId`, then branches on `type`
+    trusting the payload, de-duplicates retried deliveries (up to 5 attempts over ~3 h) on
+    `eventId`, then branches on `type`
     (`kyc.status_changed`, `kyb.status_changed`, `alert.created`, `alert.status_changed`,
     `transaction.blocked`, `webhook.test`). Point your Protegey webhook URL at `/protegey/webhook`;
     it's CSRF-exempt (see `bootstrap/app.php`) since Protegey's server calls it directly, not a

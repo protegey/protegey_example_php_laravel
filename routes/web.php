@@ -9,6 +9,8 @@ Route::get('/', function () {
 
 Route::post('/protegey/report-transaction', [ProtegeyDemoController::class, 'reportTransaction']);
 Route::get('/protegey/transactions', [ProtegeyDemoController::class, 'listTransactions']);
+Route::post('/protegey/report-cash-deposit', [ProtegeyDemoController::class, 'reportCashDeposit']);
+Route::get('/protegey/cash-deposits', [ProtegeyDemoController::class, 'listCashDeposits']);
 Route::get('/protegey/alerts', [ProtegeyDemoController::class, 'listAlerts']);
 Route::post('/protegey/start-kyc', [ProtegeyDemoController::class, 'startKyc']);
 Route::get('/protegey/kyc-sessions', [ProtegeyDemoController::class, 'listKycSessions']);

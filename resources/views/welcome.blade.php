@@ -24,9 +24,19 @@
     </fieldset>
 
     <fieldset>
+        <legend>Cash deposits</legend>
+        <button data-post="/protegey/report-cash-deposit">Record a cash deposit</button>
+        <button data-get="/protegey/cash-deposits">My cash deposits</button>
+    </fieldset>
+
+    <fieldset>
         <legend>KYC</legend>
         <button id="kyc">Verify my identity</button>
-        <button data-get="/protegey/kyc-sessions">My KYC sessions</button>
+        <button data-get="/protegey/kyc-sessions">My KYC sessions (recommendation + photos)</button>
+        <form id="kyc-lookup">
+            <input name="externalUserId" placeholder="externalUserId (exact)" required>
+            <button>Look up</button>
+        </form>
     </fieldset>
 
     <fieldset>
@@ -74,6 +84,12 @@
         document.getElementById('kyc').addEventListener('click', async () => {
             const result = await call('POST', '/protegey/start-kyc');
             if (result.url) window.open(result.url, '_blank', 'noopener,noreferrer');
+        });
+
+        document.getElementById('kyc-lookup').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const id = new FormData(e.target).get('externalUserId');
+            call('GET', '/protegey/kyc-sessions?externalUserId=' + encodeURIComponent(id));
         });
 
         const forms = { kyb: '/protegey/kyb-invite', sanctions: '/protegey/sanctions-screen', 'shared-signal': '/protegey/shared-signal-check' };

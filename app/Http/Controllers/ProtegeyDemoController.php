@@ -62,6 +62,38 @@ class ProtegeyDemoController extends Controller
         ]));
     }
 
+    /** A cash deposit taken at a branch — stored by Protegey as a monitored cash CREDIT, so it runs
+     * through the same rules (structuring, large cash, ...) and raises the same alerts. */
+    public function reportCashDeposit(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'amount' => ['nullable', 'numeric', 'gt:0'],
+            'currency' => ['nullable', 'string', 'size:3'],
+        ]);
+
+        // Returns { cashDepositId, externalTransactionId, decision: CLEAR|REVIEW|BLOCKED, riskScore, alerts[] }.
+        // externalTransactionId makes retries safe: reusing it gets a 409.
+        return $this->call(fn () => $this->protegey->cashDeposits->record([
+            'externalTransactionId' => 'laravel-deposit-'.now()->timestamp.'-'.bin2hex(random_bytes(2)),
+            'externalCustomerId' => $this->customerId(),
+            'amount' => (float) ($data['amount'] ?? 2500000),
+            'currency' => $data['currency'] ?? 'XOF',
+            'channel' => 'BRANCH',
+            'branchId' => 'DKR-PLATEAU',
+            'depositorName' => 'Awa Diallo',
+            'metadata' => ['tellerId' => 'T-04'],
+        ]));
+    }
+
+    public function listCashDeposits(): JsonResponse
+    {
+        // amount is a decimal string in each row, e.g. "2500000.00".
+        return $this->call(fn () => $this->protegey->cashDeposits->list([
+            'externalCustomerId' => $this->customerId(),
+            'limit' => 10,
+        ]));
+    }
+
     public function listAlerts(): JsonResponse
     {
         // The SDK lowercases status/disposition filters, which this endpoint requires.
@@ -73,9 +105,28 @@ class ProtegeyDemoController extends Controller
         return $this->call(fn () => $this->protegey->kyc->startSession($this->customerId()));
     }
 
-    public function listKycSessions(): JsonResponse
+    /** Exact lookup on your own customer id (defaults to this browser's demo customer). Shows
+     * Protegey's `recommendation` next to the final `status`, and the pre-signed photo links —
+     * valid 1 hour and re-issued on every call, so never store them. */
+    public function listKycSessions(Request $request): JsonResponse
     {
-        return $this->call(fn () => $this->protegey->kyc->listSessions(['search' => $this->customerId(), 'limit' => 10]));
+        $externalUserId = (string) $request->query('externalUserId', $this->customerId());
+
+        return $this->call(function () use ($externalUserId) {
+            $page = $this->protegey->kyc->findByExternalUserId($externalUserId, ['limit' => 10]);
+
+            return [
+                'externalUserId' => $externalUserId,
+                'total' => $page['total'],
+                'sessions' => array_map(fn (array $s) => [
+                    'sessionId' => $s['sessionId'],
+                    'status' => $s['status'],                 // final decision
+                    'recommendation' => $s['recommendation'] ?? null, // APPROVE | REVIEW | REJECT | null
+                    'outcome' => $s['outcome'] ?? null,
+                    'images' => $s['images'] ?? null,         // {documentFront, documentBack, selfie, documentFaceCrop}: {url, expiresAt}|null
+                ], $page['data']),
+            ];
+        });
     }
 
     /** KYB invite by email and/or phone — the response carries applicationUrl to deliver yourself
@@ -136,9 +187,11 @@ class ProtegeyDemoController extends Controller
         }
 
         match ($event['type'] ?? null) {
-            // No usable session id in this payload — correlate on externalUserId.
-            WebhookVerifier::EVENT_KYC_STATUS_CHANGED => Log::info('KYC status', [$event['externalUserId'] ?? null, $event['status'] ?? null]),
-            WebhookVerifier::EVENT_KYB_STATUS_CHANGED => Log::info('KYB status', [$event['clientId'] ?? null, $event['status'] ?? null]),
+            // Fires on an automatic result and on a manual status change; sessionId is the id
+            // startSession() returned. status is the final decision, recommendation Protegey's verdict.
+            WebhookVerifier::EVENT_KYC_STATUS_CHANGED => Log::info('KYC status', [$event['sessionId'] ?? null, $event['externalUserId'] ?? null, $event['status'] ?? null, $event['recommendation'] ?? null]),
+            // submissionStatus is UPPER_SNAKE_CASE like status (e.g. APPROVED).
+            WebhookVerifier::EVENT_KYB_STATUS_CHANGED => Log::info('KYB status', [$event['clientId'] ?? null, $event['status'] ?? null, $event['submissionStatus'] ?? null]),
             WebhookVerifier::EVENT_ALERT_CREATED,
             WebhookVerifier::EVENT_ALERT_STATUS_CHANGED => Log::info('Alert', [$event['alertId'] ?? null, $event['status'] ?? null]),
             WebhookVerifier::EVENT_TRANSACTION_BLOCKED => Log::warning('Transaction blocked', [$event['externalTransactionId'] ?? null]),

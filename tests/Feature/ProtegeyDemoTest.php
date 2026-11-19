@@ -40,6 +40,53 @@ class ProtegeyDemoTest extends TestCase
         $this->assertSame('DEBIT', json_decode((string) $this->sent()->getBody(), true)['direction']);
     }
 
+    public function test_report_cash_deposit(): void
+    {
+        $this->fakeProtegey(['cashDepositId' => 'cd1', 'externalTransactionId' => 'laravel-deposit-1', 'decision' => 'REVIEW', 'riskScore' => 20, 'alerts' => []], 201);
+
+        $this->postJson('/protegey/report-cash-deposit', ['amount' => 1500000, 'currency' => 'xof'])
+            ->assertOk()->assertJson(['cashDepositId' => 'cd1', 'decision' => 'REVIEW']);
+
+        $this->assertSame('POST', $this->sent()->getMethod());
+        $this->assertSame('/partner-api/cash-deposits', $this->sent()->getUri()->getPath());
+        $body = json_decode((string) $this->sent()->getBody(), true);
+        $this->assertEquals(1500000, $body['amount']);
+        $this->assertSame('BRANCH', $body['channel']);
+        $this->assertStringStartsWith('laravel-deposit-', $body['externalTransactionId']);
+    }
+
+    public function test_duplicate_cash_deposit_surfaces_the_409(): void
+    {
+        $this->fakeProtegey(['statusCode' => 409, 'message' => 'Transaction already submitted'], 409);
+
+        $this->postJson('/protegey/report-cash-deposit')->assertStatus(409)->assertJson(['error' => 'Transaction already submitted']);
+    }
+
+    public function test_list_cash_deposits(): void
+    {
+        $this->fakeProtegey(['data' => [['cashDepositId' => 'cd1', 'amount' => '2500000.00']], 'total' => 1, 'page' => 1, 'limit' => 10, 'totalPages' => 1]);
+
+        $this->getJson('/protegey/cash-deposits')->assertOk()->assertJsonPath('data.0.amount', '2500000.00');
+
+        $this->assertSame('/partner-api/cash-deposits', $this->sent()->getUri()->getPath());
+        $this->assertStringContainsString('limit=10', $this->sent()->getUri()->getQuery());
+    }
+
+    public function test_kyc_lookup_by_external_user_id_shows_recommendation_and_images(): void
+    {
+        $image = ['url' => 'https://bucket.s3.test/selfie.jpg?X-Amz-Signature=x', 'expiresAt' => '2026-11-19T13:00:00.000Z'];
+        $this->fakeProtegey(['data' => [['sessionId' => 's1', 'externalUserId' => 'cust-9981', 'status' => 'APPROVED', 'outcome' => 'SUCCESS', 'recommendation' => 'APPROVE', 'images' => ['documentFront' => null, 'documentBack' => null, 'selfie' => $image, 'documentFaceCrop' => null]]], 'total' => 1, 'page' => 1, 'limit' => 10, 'totalPages' => 1]);
+
+        $this->getJson('/protegey/kyc-sessions?externalUserId=cust-9981')
+            ->assertOk()
+            ->assertJsonPath('sessions.0.recommendation', 'APPROVE')
+            ->assertJsonPath('sessions.0.images.selfie.url', $image['url']);
+
+        parse_str($this->sent()->getUri()->getQuery(), $query);
+        $this->assertSame('cust-9981', $query['externalUserId']);
+        $this->assertArrayNotHasKey('search', $query);
+    }
+
     public function test_list_alerts_sends_a_lowercase_status_filter(): void
     {
         $this->fakeProtegey(['data' => [], 'total' => 0, 'page' => 1, 'limit' => 10, 'totalPages' => 1]);
