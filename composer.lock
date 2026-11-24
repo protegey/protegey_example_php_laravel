@@ -2630,12 +2630,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/protegey/protegey_php_sdk.git",
-                "reference": "c14f2141f0b5283488c5d9b9a7c0402ef6c3aa3e"
+                "reference": "14723947de2b67f14a0b0df55730c2bd26bbb34d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/protegey/protegey_php_sdk/zipball/c14f2141f0b5283488c5d9b9a7c0402ef6c3aa3e",
-                "reference": "c14f2141f0b5283488c5d9b9a7c0402ef6c3aa3e",
+                "url": "https://api.github.com/repos/protegey/protegey_php_sdk/zipball/14723947de2b67f14a0b0df55730c2bd26bbb34d",
+                "reference": "14723947de2b67f14a0b0df55730c2bd26bbb34d",
                 "shasum": ""
             },
             "require": {
@@ -2665,12 +2665,12 @@
             "license": [
                 "proprietary"
             ],
-            "description": "Official Protegey SDK for PHP backends — the full partner API (transactions, alerts, KYC, KYB, sanctions, shared signals, device/behavioral events) and webhook signature verification.",
+            "description": "Official Protegey SDK for PHP backends — the full partner API (transactions, alerts, KYC, 3D liveness, KYB, sanctions, shared signals, device/behavioral events) and webhook signature verification.",
             "support": {
                 "source": "https://github.com/protegey/protegey_php_sdk/tree/main",
                 "issues": "https://github.com/protegey/protegey_php_sdk/issues"
             },
-            "time": "2026-11-19T13:37:08+00:00"
+            "time": "2026-11-24T14:55:48+00:00"
         },
         {
             "name": "psr/clock",
